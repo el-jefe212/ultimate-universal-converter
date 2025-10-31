@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ultimate Global Universal Converter</title>
+<style>
+body { font-family: Arial, sans-serif; margin: 20px; background: #f0f2f5; color: #333; transition: background 0.3s,color 0.3s; }
+body.dark { background:#121212; color:#eee; }
+h1 { text-align:center; margin-bottom:20px; }
+label, select, input { display:block; margin:10px auto; width:90%; max-width:400px; }
+input, select { padding:8px; font-size:16px; border-radius:5px; border:1px solid #aaa; }
+#search { margin-top:10px; }
+table { width:95%; max-width:1000px; margin:20px auto; border-collapse:collapse; }
+th, td { border:1px solid #ccc; padding:10px; text-align:left; }
+th { background:#eee; }
+tbody tr:nth-child(even){background:#fafafa;}
+body.dark table th{background:#222;}
+body.dark tbody tr:nth-child(even){background:#1a1a1a;}
+body.dark tbody tr:nth-child(odd){background:#121212;}
+tr:hover{background:#d1e7ff; transition:0.2s;}
+body.dark tr:hover{background:#333;}
+</style>
+</head>
+<body>
+
+<h1>Ultimate Global Universal Converter</h1>
+
+<label for="category">Choose a category:</label>
+<select id="category">
+<option value="">--Select--</option>
+<option value="temperature">Temperature</option>
+<option value="length">Length</option>
+<option value="mass">Mass</option>
+<option value="volume">Volume</option>
+<option value="speed">Speed</option>
+<option value="area">Area</option>
+<option value="energy">Energy</option>
+<option value="power">Power</option>
+<option value="force">Force</option>
+<option value="pressure">Pressure</option>
+<option value="time">Time</option>
+<option value="digital">Digital / Computing</option>
+<option value="angle">Angle</option>
+<option value="light">Light / Optics</option>
+<option value="radioactivity">Radioactivity</option>
+<option value="currency">Currency</option>
+</select>
+
+<label for="value">Enter value:</label>
+<input type="number" id="value" placeholder="Enter value here">
+
+<label for="search">Search units (optional):</label>
+<input type="text" id="search" placeholder="Type unit name to filter results">
+
+<table id="results">
+<thead><tr><th>Unit</th><th>Value</th></tr></thead>
+<tbody></tbody>
+</table>
+
+<script>
+// Dark mode automatic
+if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches){
+    document.body.classList.add('dark');
+}
+
+// Conversion definitions
+const conversions = {
+temperature: {"°C": v=>v,"°F": v=>v*9/5+32,"K": v=>v+273.15,"°R": v=>(v+273.15)*9/5,"°Re": v=>v*4/5},
+length: {"m":v=>v,"km":v=>v/1000,"cm":v=>v*100,"mm":v=>v*1000,"inches":v=>v*39.3701,"feet":v=>v*3.28084,"yard":v=>v*1.09361,"mile":v=>v/1609.344,"light-year":v=>v/9.461e15,"parsec":v=>v/3.086e16,"AU":v=>v/1.496e11},
+mass: {"kg":v=>v,"g":v=>v*1000,"mg":v=>v*1e6,"lb":v=>v*2.20462,"oz":v=>v*35.274,"tonne":v=>v/1000,"planck mass":v=>v/2.176434e-8},
+volume: {"L":v=>v,"mL":v=>v*1000,"m³":v=>v/1000,"cups":v=>v*4.22675,"pints":v=>v*2.11338,"gallons":v=>v/3.78541},
+speed: {"m/s":v=>v,"km/h":v=>v*3.6,"mph":v=>v*2.23694,"knots":v=>v*1.94384,"c":v=>v/299792458},
+area: {"m²":v=>v,"km²":v=>v/1e6,"ft²":v=>v*10.7639,"yd²":v=>v*1.19599,"acre":v=>v/4046.86,"hectare":v=>v/10000},
+energy: {"J":v=>v,"kJ":v=>v/1000,"cal":v=>v/4.184,"kcal":v=>v/4184,"Wh":v=>v/3600,"kWh":v=>v/3.6e6,"eV":v=>v/1.602e-19},
+power: {"W":v=>v,"kW":v=>v/1000,"MW":v=>v/1e6,"hp":v=>v/745.7},
+force: {"N":v=>v,"kN":v=>v/1000,"kgf":v=>v/9.80665,"lbf":v=>v*0.224809},
+pressure: {"Pa":v=>v,"kPa":v=>v/1000,"bar":v=>v/1e5,"atm":v=>v/101325,"psi":v=>v/6894.76,"mmHg":v=>v/133.322},
+time: {"s":v=>v,"min":v=>v/60,"h":v=>v/3600,"day":v=>v/86400,"week":v=>v/604800,"year":v=>v/31557600},
+digital: {"bit":v=>v,"byte":v=>v/8,"KB":v=>v/8000,"MB":v=>v/8e6,"GB":v=>v/8e9,"TB":v=>v/8e12},
+angle: {"degree":v=>v,"radian":v=>v*Math.PI/180,"grad":v=>v*10/9,"minute":v=>v*60,"second":v=>v*3600},
+light: {"lumen":v=>v,"lux":v=>v/1,"candela":v=>v/1,"nit":v=>v,"phot":v=>v*10000},
+radioactivity: {"Bq":v=>v,"Ci":v=>v/3.7e10,"Gy":v=>v,"Sv":v=>v,"rad":v=>v*0.01,"rem":v=>v*0.01},
+currency: {"USD":v=>v,"EUR":v=>v*0.93,"GBP":v=>v*0.82,"JPY":v=>v*150,"CNY":v=>v*7.2}
+};
+
+function convert() {
+  const category = document.getElementById("category").value;
+  const value = parseFloat(document.getElementById("value").value);
+  const search = document.getElementById("search").value.toLowerCase();
+  const tbody = document.querySelector("#results tbody");
+  tbody.innerHTML = "";
+  if(!category || isNaN(value)) return;
+  const units = conversions[category];
+  for(let unit in units){
+    if(unit.toLowerCase().includes(search)){
+      const val = units[unit](value);
+      const row = document.createElement("tr");
+      row.innerHTML = `<td>${unit}</td><td>${val}</td>`;
+      tbody.appendChild(row);
+    }
+  }
+  // Save last conversions to localStorage
+  if(!isNaN(value)){
+    let history = JSON.parse(localStorage.getItem('converterHistory')||'[]');
+    history.unshift({category,value,timestamp:Date.now()});
+    if(history.length>50) history.pop();
+    localStorage.setItem('converterHistory',JSON.stringify(history));
+  }
+}
+
+document.getElementById("value").addEventListener("input",convert);
+document.getElementById("category").addEventListener("change",convert);
+document.getElementById("search").addEventListener("input",convert);
+</script>
+
+</body>
+</html>
+
+
